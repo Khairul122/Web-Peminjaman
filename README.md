@@ -48,6 +48,3 @@ App_Ruangan/
 
 Proyek ini dilisensikan di bawah MIT License.
 
----
-
-Silakan sesuaikan `README.md` ini jika ada detail tambahan atau instruksi lainnya.
