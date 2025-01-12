@@ -256,35 +256,148 @@ while ($k = mysqli_fetch_array($q)) {
 <?php } ?>
 
 <?php
+// Process form submissions
 if (isset($_POST['simpan'])) {
-	$nama_barang = $_POST['nama_barang'];
-	$stok = $_POST['stok'];
-	$deskripsi = $_POST['deskripsi'];
-	$foto = $_FILES['foto']['name'];
-	$file_tmp = $_FILES['foto']['tmp_name'];
+    // Validate database connection
+    if (!$conn) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
 
-	move_uploaded_file($file_tmp, 'master/barang/Fotobarang/' . $foto);
+    // Get form data
+    $nama_barang = mysqli_real_escape_string($conn, $_POST['nama_barang']);
+    $stok = mysqli_real_escape_string($conn, $_POST['stok']);
+    $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+    
+    // Validate required fields
+    if (empty($nama_barang) || empty($stok) || empty($deskripsi)) {
+        echo "<script>alert('Semua field harus diisi!');</script>";
+        exit;
+    }
 
-	mysqli_query($conn, "INSERT into barang values ('','$nama_barang', '$stok','$deskripsi','$foto')");
-	echo "<script>alert ('Data Berhasil Disimpan') </script>";
-	echo "<meta http-equiv='refresh' content=0; URL=?view=databarang>";
-} elseif (isset($_POST['ubah'])) {
-	$id = $_POST['id'];
-	$nama_barang = $_POST['nama_barang'];
-	$stok = $_POST['stok'];
-	$deskripsi = $_POST['deskripsi'];
-	$foto = $_FILES['foto']['name'];
-	$file_tmp = $_FILES['foto']['tmp_name'];
+    // Handle file upload
+    $foto = $_FILES['foto']['name'];
+    $file_tmp = $_FILES['foto']['tmp_name'];
+    $upload_path = 'master/barang/Fotobarang/';
+    
+    // Create directory if it doesn't exist
+    if (!file_exists($upload_path)) {
+        mkdir($upload_path, 0777, true);
+    }
 
-	move_uploaded_file($file_tmp, 'master/barang/Fotobarang/' . $foto);
+    // Generate unique filename
+    $foto = time() . '_' . $foto;
+    
+    // Attempt file upload
+    if (!move_uploaded_file($file_tmp, $upload_path . $foto)) {
+        echo "<script>alert('Gagal mengupload file!');</script>";
+        exit;
+    }
 
-	mysqli_query($conn, "UPDATE barang set id='$id', nama_barang='$nama_barang', stok='$stok', deskripsi='$deskripsi', foto='$foto' where id='$id'");
-	echo "<script>alert ('Data Berhasil Diubah') </script>";
-	echo "<meta http-equiv='refresh' content=0; URL=?view=databarang>";
-} elseif (isset($_POST['hapus'])) {
-	$id = $_POST['id'];
-	mysqli_query($conn, "DELETE from barang where id='$id'");
-	echo "<script>alert ('Data Berhasil Dihapus') </script>";
-	echo "<meta http-equiv='refresh' content=0; URL=?view=databarang>";
+    // Prepare and execute database query
+    $query = "INSERT INTO barang (nama_barang, stok, deskripsi, foto) VALUES (?, ?, ?, ?)";
+    $stmt = mysqli_prepare($conn, $query);
+    
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "siss", $nama_barang, $stok, $deskripsi, $foto);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            echo "<script>alert('Data Berhasil Disimpan');</script>";
+            echo "<meta http-equiv='refresh' content='0; URL=?view=databarang'>";
+        } else {
+            echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+            // Delete uploaded file if database insert fails
+            unlink($upload_path . $foto);
+        }
+        mysqli_stmt_close($stmt);
+    } else {
+        echo "<script>alert('Error preparing statement: " . mysqli_error($conn) . "');</script>";
+    }
+}
+
+// Edit data processing
+if (isset($_POST['ubah'])) {
+    if (!$conn) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
+
+    $id = mysqli_real_escape_string($conn, $_POST['id']);
+    $nama_barang = mysqli_real_escape_string($conn, $_POST['nama_barang']);
+    $stok = mysqli_real_escape_string($conn, $_POST['stok']);
+    $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+
+    $update_query = "UPDATE barang SET nama_barang=?, stok=?, deskripsi=?";
+    $params = [$nama_barang, $stok, $deskripsi];
+    
+    // Handle file upload if new file is selected
+    if (!empty($_FILES['foto']['name'])) {
+        $foto = time() . '_' . $_FILES['foto']['name'];
+        $file_tmp = $_FILES['foto']['tmp_name'];
+        $upload_path = 'master/barang/Fotobarang/';
+        
+        if (move_uploaded_file($file_tmp, $upload_path . $foto)) {
+            $update_query .= ", foto=?";
+            $params[] = $foto;
+            
+            // Delete old photo
+            $old_photo_query = mysqli_query($conn, "SELECT foto FROM barang WHERE id='$id'");
+            if ($old_photo = mysqli_fetch_assoc($old_photo_query)) {
+                if (file_exists($upload_path . $old_photo['foto'])) {
+                    unlink($upload_path . $old_photo['foto']);
+                }
+            }
+        }
+    }
+    
+    $update_query .= " WHERE id=?";
+    $params[] = $id;
+    
+    $stmt = mysqli_prepare($conn, $update_query);
+    if ($stmt) {
+        $types = str_repeat('s', count($params));
+        mysqli_stmt_bind_param($stmt, $types, ...$params);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            echo "<script>alert('Data Berhasil Diubah');</script>";
+            echo "<meta http-equiv='refresh' content='0; URL=?view=databarang'>";
+        } else {
+            echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+        }
+        mysqli_stmt_close($stmt);
+    }
+}
+
+// Delete data processing
+if (isset($_POST['hapus'])) {
+    if (!$conn) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
+
+    $id = mysqli_real_escape_string($conn, $_POST['id']);
+    
+    // Get photo filename before deleting record
+    $photo_query = mysqli_query($conn, "SELECT foto FROM barang WHERE id='$id'");
+    if ($photo = mysqli_fetch_assoc($photo_query)) {
+        $foto = $photo['foto'];
+    }
+    
+    $stmt = mysqli_prepare($conn, "DELETE FROM barang WHERE id=?");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "s", $id);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            // Delete photo file if record deletion successful
+            if (!empty($foto)) {
+                $file_path = 'master/barang/Fotobarang/' . $foto;
+                if (file_exists($file_path)) {
+                    unlink($file_path);
+                }
+            }
+            echo "<script>alert('Data Berhasil Dihapus');</script>";
+            echo "<meta http-equiv='refresh' content='0; URL=?view=databarang'>";
+        } else {
+            echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+        }
+        mysqli_stmt_close($stmt);
+    }
 }
 ?>

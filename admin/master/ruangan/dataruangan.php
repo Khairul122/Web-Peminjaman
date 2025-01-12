@@ -242,34 +242,133 @@ while ($k = mysqli_fetch_array($q)) {
 
 <?php } ?>
 
+
 <?php
+// Process form submissions
 if (isset($_POST['simpan'])) {
-	$nama_ruangan = $_POST['nama_ruangan'];
-	$deskripsi = $_POST['deskripsi'];
-	$foto = $_FILES['foto']['name'];
-	$file_tmp = $_FILES['foto']['tmp_name'];
+    // Validate and sanitize input
+    $nama_ruangan = mysqli_real_escape_string($conn, $_POST['nama_ruangan']);
+    $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+    
+    // Handle file upload
+    $foto = $_FILES['foto']['name'];
+    $file_tmp = $_FILES['foto']['tmp_name'];
+    $upload_path = 'master/ruangan/Fotoruangan/';
+    
+    // Create directory if it doesn't exist
+    if (!file_exists($upload_path)) {
+        mkdir($upload_path, 0777, true);
+    }
+    
+    // Generate unique filename
+    $foto = time() . '_' . $foto;
+    
+    // Validate file upload
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!in_array($_FILES['foto']['type'], $allowed_types)) {
+        echo "<script>alert('Tipe file tidak diizinkan. Gunakan format JPG, PNG, atau GIF.');</script>";
+        exit;
+    }
+    
+    // Move uploaded file
+    if (move_uploaded_file($file_tmp, $upload_path . $foto)) {
+        // Prepare and execute insert query
+        $query = "INSERT INTO ruangan (nama_ruangan, deskripsi, foto, status) VALUES (?, ?, ?, 'free')";
+        $stmt = mysqli_prepare($conn, $query);
+        
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "sss", $nama_ruangan, $deskripsi, $foto);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                echo "<script>alert('Data Berhasil Disimpan');</script>";
+                echo "<meta http-equiv='refresh' content='0; URL=?view=dataruangan'>";
+            } else {
+                echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+                // Clean up uploaded file if database insert fails
+                unlink($upload_path . $foto);
+            }
+            mysqli_stmt_close($stmt);
+        }
+    } else {
+        echo "<script>alert('Gagal mengupload file!');</script>";
+    }
+}
 
-	move_uploaded_file($file_tmp, 'master/ruangan/Fotoruangan/' . $foto);
+// Handle edit form submission
+if (isset($_POST['ubah'])) {
+    $id = mysqli_real_escape_string($conn, $_POST['id']);
+    $nama_ruangan = mysqli_real_escape_string($conn, $_POST['nama_ruangan']);
+    $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+    
+    $update_query = "UPDATE ruangan SET nama_ruangan=?, deskripsi=?";
+    $params = [$nama_ruangan, $deskripsi];
+    
+    // Handle file upload if new file is selected
+    if (!empty($_FILES['foto']['name'])) {
+        $foto = time() . '_' . $_FILES['foto']['name'];
+        $file_tmp = $_FILES['foto']['tmp_name'];
+        $upload_path = 'master/ruangan/Fotoruangan/';
+        
+        if (move_uploaded_file($file_tmp, $upload_path . $foto)) {
+            $update_query .= ", foto=?";
+            $params[] = $foto;
+            
+            // Delete old photo
+            $old_photo_query = mysqli_query($conn, "SELECT foto FROM ruangan WHERE id='$id'");
+            if ($old_photo = mysqli_fetch_assoc($old_photo_query)) {
+                if (file_exists($upload_path . $old_photo['foto'])) {
+                    unlink($upload_path . $old_photo['foto']);
+                }
+            }
+        }
+    }
+    
+    $update_query .= " WHERE id=?";
+    $params[] = $id;
+    
+    $stmt = mysqli_prepare($conn, $update_query);
+    if ($stmt) {
+        $types = str_repeat('s', count($params));
+        mysqli_stmt_bind_param($stmt, $types, ...$params);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            echo "<script>alert('Data Berhasil Diubah');</script>";
+            echo "<meta http-equiv='refresh' content='0; URL=?view=dataruangan'>";
+        } else {
+            echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+        }
+        mysqli_stmt_close($stmt);
+    }
+}
 
-	mysqli_query($conn, "INSERT into ruangan values ('','$nama_ruangan','$deskripsi','$foto','free')");
-	echo "<script>alert ('Data Berhasil Disimpan') </script>";
-	echo "<meta http-equiv='refresh' content=0; URL=?view=dataruangan>";
-} elseif (isset($_POST['ubah'])) {
-	$id = $_POST['id'];
-	$nama_ruangan = $_POST['nama_ruangan'];
-	$deskripsi = $_POST['deskripsi'];
-	$foto = $_FILES['foto']['name'];
-	$file_tmp = $_FILES['foto']['tmp_name'];
-
-	move_uploaded_file($file_tmp, 'master/ruangan/Fotoruangan/' . $foto);
-
-	mysqli_query($conn, "UPDATE ruangan set id='$id', nama_ruangan='$nama_ruangan', deskripsi='$deskripsi', foto='$foto', status='free' where id='$id'");
-	echo "<script>alert ('Data Berhasil Diubah') </script>";
-	echo "<meta http-equiv='refresh' content=0; URL=?view=dataruangan>";
-} elseif (isset($_POST['hapus'])) {
-	$id = $_POST['id'];
-	mysqli_query($conn, "DELETE from ruangan where id='$id'");
-	echo "<script>alert ('Data Berhasil Dihapus') </script>";
-	echo "<meta http-equiv='refresh' content=0; URL=?view=dataruangan>";
+// Handle delete form submission
+if (isset($_POST['hapus'])) {
+    $id = mysqli_real_escape_string($conn, $_POST['id']);
+    
+    // Get photo filename before deleting record
+    $photo_query = mysqli_query($conn, "SELECT foto FROM ruangan WHERE id='$id'");
+    if ($photo = mysqli_fetch_assoc($photo_query)) {
+        $foto = $photo['foto'];
+    }
+    
+    $stmt = mysqli_prepare($conn, "DELETE FROM ruangan WHERE id=?");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "s", $id);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            // Delete photo file if record deletion successful
+            if (!empty($foto)) {
+                $file_path = 'master/ruangan/Fotoruangan/' . $foto;
+                if (file_exists($file_path)) {
+                    unlink($file_path);
+                }
+            }
+            echo "<script>alert('Data Berhasil Dihapus');</script>";
+            echo "<meta http-equiv='refresh' content='0; URL=?view=dataruangan'>";
+        } else {
+            echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+        }
+        mysqli_stmt_close($stmt);
+    }
 }
 ?>
