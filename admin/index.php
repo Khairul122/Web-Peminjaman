@@ -44,81 +44,145 @@ session_start();
 		<div class="main-header" data-background-color="purple">
 			<!-- Logo Header -->
 			<style>
-.logo-header {
-    display: flex;
-    align-items: center;
-    padding: 0 25px;
-    height: 60px;
-}
+				.logo-header {
+					display: flex;
+					align-items: center;
+					padding: 0 25px;
+					height: 60px;
+				}
 
-.logo {
-    text-decoration: none;
-    padding: 0;
-}
+				.logo {
+					text-decoration: none;
+					padding: 0;
+				}
 
-.logo-text {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    margin-right: 15px;
-    line-height: 1.3;
-}
+				.logo-text {
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					text-align: center;
+					margin-right: 15px;
+					line-height: 1.3;
+				}
 
-.logo-text .top-text {
-    font-size: 16px;
-    font-weight: 800;
-    color: #1a2035;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-}
+				.logo-text .top-text {
+					font-size: 16px;
+					font-weight: 800;
+					color: #1a2035;
+					letter-spacing: 0.5px;
+					margin-bottom: 2px;
+				}
 
-.logo-text .bottom-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1a2035;
-    letter-spacing: 0.3px;
-}
+				.logo-text .bottom-text {
+					font-size: 14px;
+					font-weight: 600;
+					color: #1a2035;
+					letter-spacing: 0.3px;
+				}
 
-.navbar-toggler, .topbar-toggler, .btn-minimize {
-    padding: 10px;
-    margin-left: 10px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-}
+				.navbar-toggler,
+				.topbar-toggler,
+				.btn-minimize {
+					padding: 10px;
+					margin-left: 10px;
+					border: none;
+					background: transparent;
+					cursor: pointer;
+				}
 
-.navbar-toggler:hover, .topbar-toggler:hover, .btn-minimize:hover {
-    background: rgba(0,0,0,0.05);
-    border-radius: 4px;
-}
+				.navbar-toggler:hover,
+				.topbar-toggler:hover,
+				.btn-minimize:hover {
+					background: rgba(0, 0, 0, 0.05);
+					border-radius: 4px;
+				}
 
-.navbar-minimize {
-    margin-left: auto;
-}
-</style>
+				.navbar-minimize {
+					margin-left: auto;
+				}
 
-<div class="logo-header">
-    <a href="#" class="logo">
-        <div class="logo-text">
-            <span class="top-text">SEKDA</span>
-            <span class="bottom-text">KOTA LHOKSEUMAWE</span>
-        </div>
-    </a>
-    <button class="navbar-toggler sidenav-toggler" type="button" data-toggle="collapse" data-target="collapse" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon">
-            <i class="fa fa-bars"></i>
-        </span>
-    </button>
-    <button class="topbar-toggler more">
-        <i class="fa fa-ellipsis-v"></i>
-    </button>
-    <div class="navbar-minimize">
-        <button class="btn btn-minimize btn-rounded">
-            <i class="fa fa-bars"></i>
-        </button>
-    </div>
-</div>
+				.logo-image {
+					height: 40px;
+					margin-right: 15px;
+				}
+
+				.logo-header {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					width: 100%;
+				}
+
+				.sidebar {
+					background-color: #1a2035;
+					/* Warna biru gelap yang formal */
+					color: #ffffff;
+					/* Warna teks putih agar kontras */
+					width: 250px;
+					height: 100vh;
+				}
+
+				.sidebar-wrapper {
+					overflow-y: auto;
+				}
+
+				.sidebar-content {
+					padding: 15px;
+				}
+
+				.nav {
+					list-style-type: none;
+					padding: 0;
+				}
+
+				.nav-item a {
+					display: flex;
+					align-items: center;
+					color: #ffffff;
+					text-decoration: none;
+					padding: 12px 15px;
+					border-radius: 5px;
+					transition: background 0.3s ease;
+				}
+
+				.nav-item a:hover {
+					background-color: #2d3a5d;
+					/* Warna hover yang lebih terang */
+				}
+
+				.nav-item i {
+					margin-right: 10px;
+					font-size: 18px;
+				}
+
+				.nav-section {
+					border-bottom: 1px solid #ffffff2e;
+					margin: 10px 0;
+				}
+
+				.nav-item:last-child {
+					margin-top: auto;
+				}
+			</style>
+
+			<div class="logo-header">
+				<a href="#" class="logo">
+					<img src="../Kota Lhokseumawe.png" alt="Logo Kota Lhokseumawe" class="logo-image">
+				</a>
+				<button class="navbar-toggler sidenav-toggler" type="button" data-toggle="collapse" data-target="collapse" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon">
+						<i class="fa fa-bars"></i>
+					</span>
+				</button>
+				<button class="topbar-toggler more">
+					<i class="fa fa-ellipsis-v"></i>
+				</button>
+				<div class="navbar-minimize">
+					<button class="btn btn-minimize btn-rounded">
+						<i class="fa fa-bars"></i>
+					</button>
+				</div>
+			</div>
 			<!-- End Logo Header -->
 
 			<!-- Navbar Header -->
@@ -143,26 +207,19 @@ session_start();
 		</div>
 		<!-- Sidebar -->
 		<div class="sidebar">
-
 			<div class="sidebar-wrapper scrollbar-inner">
 				<div class="sidebar-content">
 					<ul class="nav">
 						<li class="nav-item">
 							<a href="?view=dashboard">
 								<i class="fas fa-home"></i>
-								<p>Dashboard</p>
+								<p>Halaman Utama</p>
 							</a>
-						</li>
-						<li class="nav-section">
-							<span class="sidebar-mini-icon">
-								<i class="fa fa-ellipsis-h"></i>
-							</span>
-							<h4 class="text-section">Components</h4>
 						</li>
 						<li class="nav-item">
 							<a data-toggle="collapse" href="#base">
 								<i class="fas fa-layer-group"></i>
-								<p>Data Master</p>
+								<p>Data</p>
 								<span class="caret"></span>
 							</a>
 							<div class="collapse" id="base">
@@ -198,7 +255,7 @@ session_start();
 						<li class="nav-item">
 							<a href="../logout.php">
 								<i class="fas fa-lock"></i>
-								<p>Logout</p>
+								<p>Keluar</p>
 							</a>
 						</li>
 					</ul>

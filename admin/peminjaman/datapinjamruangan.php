@@ -27,14 +27,14 @@
 				<div class="col-md-12">
 					<div class="card">
 						<div class="card-header">
-						<div class="card-header">
-    <div class="d-flex align-items-center justify-content-between">
-        <h4 class="card-title">Data Pinjam Ruangan</h4>
-        <button class="btn btn-primary btn-sm" onclick="generatePDF()">
-            <i class="fa fa-print"></i> Print
-        </button>
-    </div>
-</div>
+							<div class="card-header">
+								<div class="d-flex align-items-center justify-content-between">
+									<h4 class="card-title">Data Pinjam Ruangan</h4>
+									<button class="btn btn-primary btn-sm" onclick="generatePDF()">
+										<i class="fa fa-print"></i> Print
+									</button>
+								</div>
+							</div>
 						</div>
 						<div class="card-body">
 							<div class="table-responsive">
@@ -113,7 +113,7 @@
 			</div>
 		</div>
 	</div>
-	
+
 </div>
 
 
@@ -134,7 +134,7 @@ while ($row = mysqli_fetch_array($c)) {
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
-				<form method="POST" enctype="multipart/form-data" action="">
+				<form method="POST" enctype="multipart/form-data" action="peminjaman/update-ruang.php">
 					<div class="modal-body">
 						<input type="hidden" name="id" value="<?php echo $row['id'] ?>">
 						<input type="hidden" name="id_ruangan" value="<?php echo $row['id_ruangan'] ?>">
@@ -223,104 +223,123 @@ if (isset($_POST['ubah'])) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-function generatePDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
-    
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
+	function generatePDF() {
+		const {
+			jsPDF
+		} = window.jspdf;
+		const doc = new jsPDF('p', 'mm', 'a4');
 
-    // Set font
-    doc.setFont('helvetica');
-    
-    // Header
-    doc.setFontSize(16);
-    doc.text('Laporan Data Peminjaman Ruangan', pageWidth/2, 20, {align: 'center'});
-    
-    // Garis kop
-    doc.setLineWidth(0.5);
-    doc.line(15, 35, pageWidth-15, 35);
-    doc.line(15, 36, pageWidth-15, 36);
-    
-    doc.setFontSize(12);
-    // Mengambil tanggal dari database atau sistem
-    let today = new Date().toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long', 
-        year: 'numeric'
-    });
-    doc.text('Tanggal: ' + today, pageWidth/2, 30, {align: 'center'});
+		const pageWidth = doc.internal.pageSize.width;
+		const pageHeight = doc.internal.pageSize.height;
 
-    // Tabel
-    const headers = [
-        ['No', 'Nama Ruangan', 'Tanggal Mulai', 'Tanggal Selesai', 'Status']
-    ];
+		// Set font
+		doc.setFont('helvetica');
 
-    // Ambil data dari tabel HTML
-    const data = [];
-    const table = document.getElementById('add-row');
-    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-    
-    for(let i = 0; i < rows.length; i++) {
-        const cells = rows[i].getElementsByTagName('td');
-        let status = cells[4].querySelector('.badge').textContent; // Mengambil text dari badge status
-        
-        if(cells.length) {
-            data.push([
-                cells[0].innerText, // No
-                cells[1].innerText, // Nama Ruangan
-                cells[2].innerText, // Tgl Mulai
-                cells[3].innerText, // Tgl Selesai
-                status // Status
-            ]);
-        }
-    }
+		// Header
+		doc.setFontSize(16);
+		doc.text('Laporan Data Peminjaman Ruangan', pageWidth / 2, 20, {
+			align: 'center'
+		});
 
-    // Konfigurasi tabel
-    doc.autoTable({
-        head: headers,
-        body: data,
-        startY: 45,
-        theme: 'grid',
-        styles: {
-            fontSize: 9,
-            cellPadding: 2,
-            halign: 'center'
-        },
-        headStyles: {
-            fillColor: [51, 122, 183],
-            textColor: [255, 255, 255],
-            fontSize: 10,
-            fontStyle: 'bold',
-            halign: 'center'
-        },
-        columnStyles: {
-            0: {cellWidth: 15}, // No
-            1: {cellWidth: 50}, // Nama Ruangan
-            2: {cellWidth: 45}, // Tgl Mulai
-            3: {cellWidth: 45}, // Tgl Selesai
-            4: {cellWidth: 25} // Status
-        },
-        margin: { left: 15, right: 15 } // Margin kiri kanan untuk centralize tabel
-    });
+		// Garis kop
+		doc.setLineWidth(0.5);
+		doc.line(15, 35, pageWidth - 15, 35);
+		doc.line(15, 36, pageWidth - 15, 36);
 
-    // Footer - Dicetak pada
-    let finalY = doc.previousAutoTable.finalY + 20;
-    
-    doc.setFontSize(10);
-    let printDate = new Date().toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric'
-    });
-    let printTime = new Date().toLocaleTimeString('id-ID', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-    doc.text(`Dicetak pada: ${printDate}, ${printTime}`, 15, pageHeight - 10);
-    
-    // Save PDF
-    doc.save('Laporan_Peminjaman_Ruangan.pdf');
-}
+		doc.setFontSize(12);
+		// Mengambil tanggal dari database atau sistem
+		let today = new Date().toLocaleDateString('id-ID', {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		});
+		doc.text('Tanggal: ' + today, pageWidth / 2, 30, {
+			align: 'center'
+		});
+
+		// Tabel
+		const headers = [
+			['No', 'Nama Ruangan', 'Tanggal Mulai', 'Tanggal Selesai', 'Status']
+		];
+
+		// Ambil data dari tabel HTML
+		const data = [];
+		const table = document.getElementById('add-row');
+		const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+		for (let i = 0; i < rows.length; i++) {
+			const cells = rows[i].getElementsByTagName('td');
+			let status = cells[4].querySelector('.badge').textContent; // Mengambil text dari badge status
+
+			if (cells.length) {
+				data.push([
+					cells[0].innerText, // No
+					cells[1].innerText, // Nama Ruangan
+					cells[2].innerText, // Tgl Mulai
+					cells[3].innerText, // Tgl Selesai
+					status // Status
+				]);
+			}
+		}
+
+		// Konfigurasi tabel
+		doc.autoTable({
+			head: headers,
+			body: data,
+			startY: 45,
+			theme: 'grid',
+			styles: {
+				fontSize: 9,
+				cellPadding: 2,
+				halign: 'center'
+			},
+			headStyles: {
+				fillColor: [51, 122, 183],
+				textColor: [255, 255, 255],
+				fontSize: 10,
+				fontStyle: 'bold',
+				halign: 'center'
+			},
+			columnStyles: {
+				0: {
+					cellWidth: 15
+				}, // No
+				1: {
+					cellWidth: 50
+				}, // Nama Ruangan
+				2: {
+					cellWidth: 45
+				}, // Tgl Mulai
+				3: {
+					cellWidth: 45
+				}, // Tgl Selesai
+				4: {
+					cellWidth: 25
+				} // Status
+			},
+			margin: {
+				left: 15,
+				right: 15
+			} // Margin kiri kanan untuk centralize tabel
+		});
+
+		// Footer - Dicetak pada
+		let finalY = doc.previousAutoTable.finalY + 20;
+
+		doc.setFontSize(10);
+		let printDate = new Date().toLocaleDateString('id-ID', {
+			day: 'numeric',
+			month: 'numeric',
+			year: 'numeric'
+		});
+		let printTime = new Date().toLocaleTimeString('id-ID', {
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit'
+		});
+		doc.text(`Dicetak pada: ${printDate}, ${printTime}`, 15, pageHeight - 10);
+
+		// Save PDF
+		doc.save('Laporan_Peminjaman_Ruangan.pdf');
+	}
 </script>
